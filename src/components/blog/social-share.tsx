@@ -1,6 +1,7 @@
 "use client";
 
 import { IconBrandLinkedin, IconBrandFacebook, IconLink, IconMail } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 
 interface SocialShareProps {
   url?: string;
@@ -8,8 +9,15 @@ interface SocialShareProps {
 }
 
 export function SocialShare({ url, title }: SocialShareProps) {
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : url || '';
+  const [currentUrl, setCurrentUrl] = useState(url || '');
   const shareTitle = title || 'Check out this article';
+
+  // Avoid hydration mismatch by only setting URL on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setCurrentUrl(window.location.href);
+    }
+  }, []);
 
   const handleShare = (platform: string) => {
     let shareUrl = '';

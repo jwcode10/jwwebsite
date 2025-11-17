@@ -19,7 +19,9 @@ export async function datoCMSFetch<T = unknown>(
   const apiToken = process.env.DATOCMS_API_TOKEN;
 
   if (!apiToken) {
-    throw new Error("DATOCMS_API_TOKEN is not set. Please add it to your environment.");
+    // Return empty/default response instead of throwing to prevent site crash
+    console.warn("DATOCMS_API_TOKEN is not set. Returning empty data. Please add DATOCMS_API_TOKEN to your .env.local file.");
+    return {} as T;
   }
 
   const response = await fetch(preview ? DATOCMS_PREVIEW_ENDPOINT : DATOCMS_BASE_ENDPOINT, {

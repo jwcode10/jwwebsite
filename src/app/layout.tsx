@@ -35,18 +35,20 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: {
-    default: "JourneyWell Content Agency - Creative Content Solutions",
-    template: "%s | JourneyWell Content Agency",
+    default: "Journey Well | Content Agency in Baton Rouge",
+    template: "%s | Journey Well",
   },
   description:
-    "JourneyWell Content Agency helps entrepreneurs and brands show up with confidence online through storytelling and content mastery.",
+    "Full-service content agency in Baton Rouge for podcasts, YouTube, reels, and social media; strategy, production, and publishing.",
   keywords: [
-    "content agency",
-    "creative agency",
-    "storytelling",
-    "content marketing",
-    "brand strategy",
-    "entrepreneurs",
+    "Journey Well content agency Baton Rouge",
+    "content creation agency Baton Rouge",
+    "content production Baton Rouge",
+    "creative agency Baton Rouge",
+    "podcast production Baton Rouge",
+    "YouTube editing Baton Rouge",
+    "short-form video Baton Rouge",
+    "social media management Baton Rouge",
   ],
   openGraph: {
     type: "website",
@@ -78,6 +80,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${instrumentSerif.variable} font-body antialiased bg-white dark:bg-[#0B0D1E]`}
+        suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"

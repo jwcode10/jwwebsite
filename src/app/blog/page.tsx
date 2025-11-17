@@ -73,6 +73,11 @@ async function getBlogPosts(limit = 10) {
     revalidate: 300,
   });
 
+  // Handle case when DATOCMS_API_TOKEN is not set or API returns empty data
+  if (!data || !data.allBlogs || !Array.isArray(data.allBlogs)) {
+    return [];
+  }
+
   const publishedPosts = data.allBlogs.filter(post => post._status === "published" || !post._status);
 
   return publishedPosts.map<BlogPost>(post => {

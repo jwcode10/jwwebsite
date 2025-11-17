@@ -85,6 +85,11 @@ async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
     revalidate: 300,
   });
 
+  // Handle case when DATOCMS_API_TOKEN is not set or API returns empty data
+  if (!data || !data.blog) {
+    return null;
+  }
+
   const record = data.blog;
 
   if (!record || (record._status && record._status !== "published")) {
@@ -270,6 +275,11 @@ export async function generateStaticParams() {
   const data = await datoCMSFetch<{
     allBlogs: Array<{ seoSlug: string; _status?: string | null }>;
   }>(ALL_BLOG_SLUGS_QUERY, { revalidate: 300 });
+
+  // Handle case when DATOCMS_API_TOKEN is not set or API returns empty data
+  if (!data || !data.allBlogs || !Array.isArray(data.allBlogs)) {
+    return [];
+  }
 
   return data.allBlogs
     .filter(post => post._status === "published" || !post._status)

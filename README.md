@@ -104,7 +104,10 @@ Create a `.env.local` file for environment-specific configuration:
 
 ```env
 NEXT_PUBLIC_SITE_URL=https://yoursite.com
+DATOCMS_API_TOKEN=your_datocms_api_token_here
 ```
+
+**Note:** The `DATOCMS_API_TOKEN` is required for the blog functionality. If not set, the blog pages will display an empty state instead of crashing. Get your API token from [DatoCMS](https://www.datocms.com/docs/content-delivery-api/api-tokens).
 
 ## 📄 Adding New Pages
 
