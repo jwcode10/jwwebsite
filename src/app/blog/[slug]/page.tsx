@@ -80,41 +80,47 @@ const ALL_BLOG_SLUGS_QUERY = `
 `;
 
 async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
-  const data = await datoCMSFetch<BlogBySlugQueryResponse>(BLOG_BY_SLUG_QUERY, {
-    variables: { slug },
-    revalidate: 300,
-  });
+  try {
+    const data = await datoCMSFetch<BlogBySlugQueryResponse>(BLOG_BY_SLUG_QUERY, {
+      variables: { slug },
+      revalidate: 0, // On-demand revalidation via webhook
+    });
 
-  // Handle case when DATOCMS_API_TOKEN is not set or API returns empty data
-  if (!data || !data.blog) {
+    // Handle case when DATOCMS_API_TOKEN is not set or API returns empty data
+    if (!data || !data.blog) {
+      return null;
+    }
+
+    const record = data.blog;
+
+    if (!record || (record._status && record._status !== "published")) {
+      return null;
+    }
+
+    const sections = parseBodyToSections(record.body);
+
+    return {
+      slug: record.seoSlug,
+      title: record.title,
+      summary: record.summary ?? record.body?.slice(0, 160) ?? "",
+      body: record.body ?? "",
+      formattedDate: formatPublishDate(record.publishDate),
+      readTime: estimateReadTime(record.body),
+      author: record.author ?? undefined,
+      categories: extractCategories(record.categories),
+      featuredImage: record.featuredImage
+        ? {
+            url: record.featuredImage.url,
+            alt: record.featuredImage.alt ?? record.title,
+          }
+        : undefined,
+      sections,
+    };
+  } catch (error) {
+    // Prevent server crash if anything goes wrong
+    console.error("Error fetching blog post:", error);
     return null;
   }
-
-  const record = data.blog;
-
-  if (!record || (record._status && record._status !== "published")) {
-    return null;
-  }
-
-  const sections = parseBodyToSections(record.body);
-
-  return {
-    slug: record.seoSlug,
-    title: record.title,
-    summary: record.summary ?? record.body?.slice(0, 160) ?? "",
-    body: record.body ?? "",
-    formattedDate: formatPublishDate(record.publishDate),
-    readTime: estimateReadTime(record.body),
-    author: record.author ?? undefined,
-    categories: extractCategories(record.categories),
-    featuredImage: record.featuredImage
-      ? {
-          url: record.featuredImage.url,
-          alt: record.featuredImage.alt ?? record.title,
-        }
-      : undefined,
-    sections,
-  };
 }
 
 export async function generateMetadata({
@@ -122,19 +128,32 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
-  const post = await getBlogPostBySlug(params.slug);
+  try {
+    const post = await getBlogPostBySlug(params.slug);
 
-  if (!post) {
+    if (!post) {
+      return {
+        title: "Post Not Found",
+      };
+    }
+
     return {
-      title: "Post Not Found",
+      title: post.title,
+      description: post.summary,
+    };
+  } catch (error) {
+    // Prevent server crash if metadata generation fails
+    console.error("Error generating metadata:", error);
+    return {
+      title: "JourneyWell Blog",
+      description: "Blog post from JourneyWell",
     };
   }
-
-  return {
-    title: post.title,
-    description: post.summary,
-  };
 }
+
+// Force dynamic rendering for immediate updates
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function BlogPostPage({ params }: { params: { slug: string } }) {
   const post = await getBlogPostBySlug(params.slug);
@@ -272,19 +291,25 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 }
 
 export async function generateStaticParams() {
-  const data = await datoCMSFetch<{
-    allBlogs: Array<{ seoSlug: string; _status?: string | null }>;
-  }>(ALL_BLOG_SLUGS_QUERY, { revalidate: 300 });
+  try {
+    const data = await datoCMSFetch<{
+      allBlogs: Array<{ seoSlug: string; _status?: string | null }>;
+    }>(ALL_BLOG_SLUGS_QUERY, { revalidate: 0 }); // On-demand revalidation via webhook
 
-  // Handle case when DATOCMS_API_TOKEN is not set or API returns empty data
-  if (!data || !data.allBlogs || !Array.isArray(data.allBlogs)) {
+    // Handle case when DATOCMS_API_TOKEN is not set or API returns empty data
+    if (!data || !data.allBlogs || !Array.isArray(data.allBlogs)) {
+      return [];
+    }
+
+    return data.allBlogs
+      .filter(post => post._status === "published" || !post._status)
+      .map(post => ({
+        slug: post.seoSlug,
+      }));
+  } catch (error) {
+    // Prevent server crash if anything goes wrong during static params generation
+    console.error("Error generating static params:", error);
     return [];
   }
-
-  return data.allBlogs
-    .filter(post => post._status === "published" || !post._status)
-    .map(post => ({
-      slug: post.seoSlug,
-    }));
 }
 

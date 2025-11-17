@@ -268,6 +268,7 @@ export function Header() {
                 >
                   <Link
                     href={item.href}
+                    onClick={() => setActiveDropdown(null)}
                     className={`text-sm font-medium transition-colors flex items-center gap-1 ${
                       activeDropdown === "blog"
                         ? "text-gray-900 dark:text-white bg-gray-100 dark:bg-[#1a1f3a] px-3 py-2 rounded-lg"
@@ -290,6 +291,7 @@ export function Header() {
                         <div>
                           <Link
                             href="/blog"
+                            onClick={() => setActiveDropdown(null)}
                             className="text-gray-900 dark:text-white font-semibold text-base mb-6 flex items-center gap-2 hover:text-[#4F6DF5] transition-colors"
                           >
                             Learning Center
@@ -300,6 +302,7 @@ export function Header() {
                               <Link
                                 key={idx}
                                 href="/blog"
+                                onClick={() => setActiveDropdown(null)}
                                 className="block group hover:bg-gray-50 dark:hover:bg-[#1a1f3a] p-3 rounded-lg transition-colors"
                               >
                                 <div className="flex items-start justify-between">
@@ -324,6 +327,7 @@ export function Header() {
                           <div className="mb-8">
                             <Link
                               href="/blog"
+                              onClick={() => setActiveDropdown(null)}
                               className="text-gray-900 dark:text-white font-semibold text-base mb-4 flex items-center gap-2 hover:text-[#4F6DF5] transition-colors"
                             >
                               Blog
@@ -334,6 +338,7 @@ export function Header() {
                                 <Link
                                   key={idx}
                                   href="/blog"
+                                  onClick={() => setActiveDropdown(null)}
                                   className="group block"
                                 >
                                   <div className="relative aspect-video rounded-lg overflow-hidden mb-2 bg-gray-200 dark:bg-[#1a1f3a]">

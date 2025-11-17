@@ -68,38 +68,44 @@ const ALL_BLOGS_QUERY = `
 `;
 
 async function getBlogPosts(limit = 10) {
-  const data = await datoCMSFetch<AllBlogsQueryResponse>(ALL_BLOGS_QUERY, {
-    variables: { limit },
-    revalidate: 300,
-  });
+  try {
+    const data = await datoCMSFetch<AllBlogsQueryResponse>(ALL_BLOGS_QUERY, {
+      variables: { limit },
+      revalidate: 0, // On-demand revalidation via webhook
+    });
 
-  // Handle case when DATOCMS_API_TOKEN is not set or API returns empty data
-  if (!data || !data.allBlogs || !Array.isArray(data.allBlogs)) {
+    // Handle case when DATOCMS_API_TOKEN is not set or API returns empty data
+    if (!data || !data.allBlogs || !Array.isArray(data.allBlogs)) {
+      return [];
+    }
+
+    const publishedPosts = data.allBlogs.filter(post => post._status === "published" || !post._status);
+
+    return publishedPosts.map<BlogPost>(post => {
+      const categories = extractCategories(post.categories);
+      const readTime = estimateReadTime(post.body);
+
+      return {
+        slug: post.seoSlug,
+        title: post.title,
+        excerpt: post.summary ?? post.body?.slice(0, 180) ?? "Stay tuned for updates from the JourneyWell team.",
+        categories,
+        readTime,
+        publishedAt: formatPublishDate(post.publishDate),
+        author: post.author ?? undefined,
+        featuredImage: post.featuredImage
+          ? {
+              url: post.featuredImage.url,
+              alt: post.featuredImage.alt ?? post.title,
+            }
+          : undefined,
+      };
+    });
+  } catch (error) {
+    // Prevent server crash if anything goes wrong
+    console.error("Error fetching blog posts:", error);
     return [];
   }
-
-  const publishedPosts = data.allBlogs.filter(post => post._status === "published" || !post._status);
-
-  return publishedPosts.map<BlogPost>(post => {
-    const categories = extractCategories(post.categories);
-    const readTime = estimateReadTime(post.body);
-
-    return {
-      slug: post.seoSlug,
-      title: post.title,
-      excerpt: post.summary ?? post.body?.slice(0, 180) ?? "Stay tuned for updates from the JourneyWell team.",
-      categories,
-      readTime,
-      publishedAt: formatPublishDate(post.publishDate),
-      author: post.author ?? undefined,
-      featuredImage: post.featuredImage
-        ? {
-            url: post.featuredImage.url,
-            alt: post.featuredImage.alt ?? post.title,
-          }
-        : undefined,
-    };
-  });
 }
 
 export const metadata: Metadata = {
@@ -107,6 +113,10 @@ export const metadata: Metadata = {
   description:
     "Insights, experiments, and frameworks from the JourneyWell team on building AI-enhanced product experiences.",
 };
+
+// Force dynamic rendering for immediate updates
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function BlogPage() {
   const posts = await getBlogPosts(12);
