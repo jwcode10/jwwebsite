@@ -11,11 +11,13 @@ type NavItem = {
 };
 
 const navigation: NavItem[] = [
+  { name: "HOME", href: "/" },
   { name: "ABOUT", href: "#about" },
   { name: "SERVICES", href: "#services", hasDropdown: true },
   { name: "PORTFOLIO", href: "#portfolio" },
   { name: "BLOG", href: "/blog", hasDropdown: true },
   { name: "PRICING", href: "#pricing" },
+  { name: "HOME 2", href: "/homepage-two" },
 ];
 
 // Services dropdown data
@@ -75,6 +77,7 @@ export function Header() {
   const blogRef = useRef<HTMLDivElement>(null);
   const servicesDropdownRef = useRef<HTMLDivElement>(null);
   const blogDropdownRef = useRef<HTMLDivElement>(null);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -85,6 +88,29 @@ export function Header() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleDropdownEnter = (dropdown: "services" | "blog") => {
+    if (closeTimeoutRef.current) {
+      clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
+    setActiveDropdown(dropdown);
+  };
+
+  const handleDropdownLeave = () => {
+    closeTimeoutRef.current = setTimeout(() => {
+      setActiveDropdown(null);
+    }, 200); // 200ms delay to allow moving to dropdown
+  };
 
 
   return (
@@ -119,12 +145,8 @@ export function Header() {
                   key={item.name}
                   ref={servicesRef}
                   className="relative"
-                  onMouseEnter={() => setActiveDropdown("services")}
-                  onMouseLeave={() => {
-                    if (!servicesDropdownRef.current?.matches(":hover")) {
-                      setActiveDropdown(null);
-                    }
-                  }}
+                  onMouseEnter={() => handleDropdownEnter("services")}
+                  onMouseLeave={handleDropdownLeave}
                 >
                   <a
                     href={item.href}
@@ -142,8 +164,11 @@ export function Header() {
                     <div
                       ref={servicesDropdownRef}
                       className="fixed left-0 right-0 top-20 w-screen bg-white dark:bg-[#0A0F2C] border-t border-gray-200 dark:border-[#1a1f3a] shadow-xl animate-[fadeIn_0.2s_ease-in-out_forwards] z-40"
-                      onMouseLeave={() => setActiveDropdown(null)}
+                      onMouseEnter={() => handleDropdownEnter("services")}
+                      onMouseLeave={handleDropdownLeave}
                     >
+                      {/* Invisible bridge to prevent gap issues */}
+                      <div className="absolute -top-2 left-0 right-0 h-2" />
                       <div className="container-custom py-8">
                         <div className="grid grid-cols-3 gap-8 max-w-7xl mx-auto">
                         {/* Column 1: Creative Design Services */}
@@ -255,12 +280,8 @@ export function Header() {
                   key={item.name}
                   ref={blogRef}
                   className="relative"
-                  onMouseEnter={() => setActiveDropdown("blog")}
-                  onMouseLeave={() => {
-                    if (!blogDropdownRef.current?.matches(":hover")) {
-                      setActiveDropdown(null);
-                    }
-                  }}
+                  onMouseEnter={() => handleDropdownEnter("blog")}
+                  onMouseLeave={handleDropdownLeave}
                 >
                   <Link
                     href={item.href}
@@ -278,8 +299,11 @@ export function Header() {
                     <div
                       ref={blogDropdownRef}
                       className="fixed left-0 right-0 top-20 w-screen bg-white dark:bg-[#0A0F2C] border-t border-gray-200 dark:border-[#1a1f3a] shadow-xl animate-[fadeIn_0.2s_ease-in-out_forwards] z-40"
-                      onMouseLeave={() => setActiveDropdown(null)}
+                      onMouseEnter={() => handleDropdownEnter("blog")}
+                      onMouseLeave={handleDropdownLeave}
                     >
+                      {/* Invisible bridge to prevent gap issues */}
+                      <div className="absolute -top-2 left-0 right-0 h-2" />
                       <div className="container-custom py-8">
                         <div className="grid grid-cols-2 gap-8 max-w-7xl mx-auto">
                         {/* Left Column: Learning Center */}
